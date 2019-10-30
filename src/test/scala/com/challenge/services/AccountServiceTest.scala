@@ -59,6 +59,13 @@ class AccountServiceTest extends FlatSpec with ResultAssertions {
     service.commitTransaction(transaction.merchantOneP100).map(expectViolations(_)(ExceedLimitTopBoundary))
   }.withState(state.activeCardMaxLimit)
 
+  it should "list multiple violations if found" in {
+    service
+      .commitTransaction(transaction.merchantOneM100).map(expectViolations(_)(CardNotActive, InsufficientLimit)).withState(
+        state.inactiveCardZeroLimit
+      )
+  }
+
   it should "accept transaction if no rules were violated" in {
     val t = transaction.merchantOneM100
     val acc = account.activeCard1KLimit
