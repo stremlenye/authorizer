@@ -1,3 +1,21 @@
 package com.challenge.models
 
-final case class AccountInformation(account: Account, transactions: List[Transaction])
+import java.time.temporal.ChronoUnit
+
+import com.challenge.utils.TimeBasedMap
+
+final case class AccountInformation(account: Account, transactions: TimeBasedMap[Transaction]) {
+
+  def submitTransaction(t: Transaction): AccountInformation =
+    this.copy(
+      transactions = transactions.add(t.time, t),
+      account = account.copy(
+        availableLimit = account.availableLimit + t.amount
+      )
+    )
+}
+
+object AccountInformation {
+  def apply(account: Account): AccountInformation =
+    new AccountInformation(account, TimeBasedMap.empty(ChronoUnit.MINUTES))
+}

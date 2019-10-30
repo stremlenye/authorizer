@@ -1,4 +1,4 @@
-package com.challenge.io
+package com.challenge.utils
 
 import cats.data.EitherT
 import cats.effect.{ExitCode, Sync}

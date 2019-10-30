@@ -1,11 +1,11 @@
 package com.challenge.algebras
 
 import cats.tagless.{Derive, FunctorK}
-import com.challenge.models.{Account, Transaction}
+import com.challenge.models.{Account, Result, Transaction}
 
 trait AccountAlgebra[F[_]] {
-  def createAccount(a: Account): F[Account]
-  def commitTransaction(t: Transaction): F[Account]
+  def createAccount(a: Account): F[Result]
+  def commitTransaction(t: Transaction): F[Result]
 }
 
 object AccountAlgebra {

@@ -1,28 +1,64 @@
 package com.challenge
 
+import java.time.Duration
 
-import com.challenge.io.Loop
-
-import cats.data.{EitherT, StateT}
+import cats.data.{EitherT, Kleisli, StateT}
 import cats.effect.{ExitCode, IO, IOApp}
+import io.circe._
 import cats.syntax.functor._
+import com.challenge.algebras.AccountAlgebra
+import com.challenge.models.{AccountInformation, Event, Result}
+import com.challenge.services.{AccountService, InMemoryAccountInformationRepo}
+import com.challenge.utils.Processor.Processor
+import com.challenge.utils.{Loop, Processor}
+import cats.mtl.instances.state._
+import cats.tagless.syntax.functorK._
+import cats.~>
+import com.challenge.services.validators.account.DuplicateAccountValidator
+import com.challenge.services.validators.accountinformation.AccountInformationExistenceValidator
+import com.challenge.services.validators.transactions._
 
 object Main extends IOApp {
 
-  final case class Store(ax: List[String])
+  override def run(args: List[String]): IO[ExitCode] = {
 
-  override def run(args : List[String]) : IO[ExitCode] = {
-    type F[A] = StateT[IO, Store, A]
+    type ExecutionContextT[F[_], A] = EitherT[F, ExitCode, A]
+    type StoreContext[A] = StateT[IO, Option[AccountInformation], A]
+    type AppContext[A] = ExecutionContextT[StoreContext, A]
 
-    val source: F[String] = StateT.liftF(IO(Console.in.readLine()))
-    val sink: String => F[Unit] = a => StateT.liftF(IO(Console.println(s"${Console.YELLOW}${a}${Console.RESET}")).void)
-    val processor: String => EitherT[F, ExitCode, String] = {
-      case "" => EitherT.leftT(ExitCode.Success)
-      case other =>
-        val a: F[String] = StateT.modify[IO, Store](s => s.copy(ax = other +: s.ax)).transform { (s, _) => (s, s.ax.mkString("\n")) }
-        EitherT.liftF(a)
+    val contextLifting: StoreContext ~> AppContext =
+      λ[StoreContext ~> AppContext] { EitherT.liftF(_) }
+
+    val source: StoreContext[String] = StateT.liftF(IO(Console.in.readLine()))
+    val sink: String => StoreContext[Unit] = a => StateT.liftF(IO(Console.println(s"${Console.YELLOW}$a${Console.RESET}")).void)
+
+    val repo = new InMemoryAccountInformationRepo[StoreContext]
+    val transactionValidator = new AggregatedTransactionsValidator(
+      ActiveCardValidator,
+      LimitValidator,
+      new FrequencyValidator(Duration.ofMinutes(2), 3),
+      new DoubledTransactionValidator(Duration.ofMinutes(2), 1)
+    )
+
+    val accountService: AccountAlgebra[AppContext] =
+      (new AccountService(repo, DuplicateAccountValidator, AccountInformationExistenceValidator, transactionValidator): AccountAlgebra[
+        StoreContext
+      ]).mapK(contextLifting)
+
+    def errorToExitCode[E](e: E): ExitCode = ExitCode.Error
+
+    val dispatcher: Kleisli[AppContext, Event, Result] = Kleisli[AppContext, Event, Result] {
+      case Event.CreateAccount(a)     => accountService.createAccount(a)
+      case Event.CommitTransaction(t) => accountService.commitTransaction(t)
     }
 
-    Loop.run(source, sink)(processor).run(Store(List())).map { case (_, exitCode: ExitCode) => exitCode}
+    val p: Processor[AppContext, String, String] =
+      Processor.stringToJson[AppContext, ExitCode](errorToExitCode) andThen
+        Processor.jsonToA[AppContext, Event, ExitCode](errorToExitCode) andThen
+        dispatcher andThen
+        Processor.aToJson[AppContext, Result] andThen
+        Processor.jsonToString[AppContext](Printer.spaces2)
+
+    Loop.run(source, sink)(p.run).run(None).map { case (_, exitCode: ExitCode) => exitCode }
   }
 }

@@ -2,6 +2,7 @@ package com.challenge.io
 
 import cats.data.EitherT
 import cats.effect.{ExitCode, SyncIO}
+import com.challenge.utils.Loop
 import org.scalatest.FunSuite
 
 class LoopTest extends FunSuite {
