@@ -8,6 +8,7 @@ import com.challenge.models.{
   AccountInformation,
   CardNotActive,
   DoubledTransaction,
+  ExceedLimitTopBoundary,
   HighFrequency,
   InsufficientLimit,
   Transaction,
@@ -23,24 +24,23 @@ sealed abstract class PredicateTransactionValidator(p: (AccountInformation, Tran
 
 object ActiveCardValidator extends PredicateTransactionValidator((i, _) => i.account.activeCard, CardNotActive)
 
-object LimitValidator extends PredicateTransactionValidator(_.account.availableLimit + _.amount >= 0, InsufficientLimit)
+object LimitValidator extends PredicateTransactionValidator(_.account.availableLimit.toLong + _.amount >= 0, InsufficientLimit)
 
 class FrequencyValidator(interval: Duration, threshold: Int)
   extends PredicateTransactionValidator(
-    (i, t) =>
-      List(
-        i.transactions.getInInterval(t.time, t.time.plus(interval)).length,
-        i.transactions.getInInterval(t.time.minus(interval), t.time).length
-      ).exists(_ > threshold),
+    (i, t) => i.transactions.sliding(t.time.minus(interval), t.time, interval).forall(_.size < threshold)
+    ,
     HighFrequency
   )
 
 class DoubledTransactionValidator(interval: Duration, threshold: Int)
   extends PredicateTransactionValidator(
-    (i, t) =>
-      List(
-        i.transactions.getInInterval(t.time, t.time.plus(interval)).filter(_ eqv t),
-        i.transactions.getInInterval(t.time.minus(interval), t.time)
-      ).map(_.count(_ eqv t)).exists(_ > threshold),
+    (i, t) => i.transactions.sliding(t.time.minus(interval), t.time, interval).forall(_.count(_ eqv t) < threshold),
     DoubledTransaction
+  )
+
+object LimitTopBoundaryValidator
+  extends PredicateTransactionValidator(
+    (i, t) => i.account.availableLimit.toLong + t.amount <= Int.MaxValue,
+    ExceedLimitTopBoundary
   )

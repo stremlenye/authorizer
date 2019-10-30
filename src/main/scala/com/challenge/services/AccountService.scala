@@ -34,7 +34,7 @@ class AccountService[F[_]](
         Result.failure(None, _).pure[F],
         accountInformation => transactionValidator.validate(accountInformation, transaction).fold(
           Result.failure(Some(accountInformation.account), _).pure[F],
-          t => repo.set(accountInformation.submitTransaction(t)).as(Result.success(accountInformation.account))
+          t => repo.set(accountInformation.submitTransaction(t)).map(ai => Result.success(ai.account))
         )
       )
     } yield result

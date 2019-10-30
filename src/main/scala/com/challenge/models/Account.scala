@@ -1,5 +1,6 @@
 package com.challenge.models
 
+import cats.Eq
 import io.circe.generic.extras.Configuration
 import io.circe.generic.extras.semiauto._
 import io.circe.{Decoder, Encoder}
@@ -12,4 +13,5 @@ object Account {
 
   implicit val encoder: Encoder[Account] = deriveEncoder
   implicit val decoder: Decoder[Account] = deriveDecoder
+  implicit val eq: Eq[Account] = Eq.fromUniversalEquals
 }
