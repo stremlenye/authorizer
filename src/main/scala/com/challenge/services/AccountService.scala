@@ -19,9 +19,9 @@ class AccountService[F[_]](
   def createAccount(a: Account): F[Result] =
     for {
       state <- repo.get
-      validated = newAccountValidator.validate(state, a)
-      result <- validated.fold[F[Result]](
-        Result.failure(None, _).pure[F],
+      valid = newAccountValidator.validate(state, a)
+      result <- valid.fold[F[Result]](
+        Result.failure(state.map(_.account), _).pure[F],
         account => repo.set(AccountInformation(account)).as(Result.success(account))
       )
     } yield result

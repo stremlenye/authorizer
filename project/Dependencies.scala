@@ -33,7 +33,7 @@ object Dependencies {
     "io.circe" %% "circe-generic-extras",
     "io.circe" %% "circe-shapes",
     "io.circe" %% "circe-parser"
-  ).map(_ % circeVersion)
+  ).map(_ % circeVersion % "compile,it")
 
   val pureconfig = "com.github.pureconfig" %% "pureconfig" % pureconfigVersion
 

@@ -1,13 +1,24 @@
 package com.challenge.models
 
 import cats.Eq
-import io.circe.Encoder
 import cats.instances.string._
+import cats.syntax.either._
+import io.circe.{Decoder, Encoder}
 
 sealed abstract class Violation(val code: String)
 
 object Violation {
   implicit val encoder: Encoder[Violation] = Encoder.encodeString.contramap[Violation](_.code)
+  implicit val decoder: Decoder[Violation] = Decoder.decodeString.emap {
+    case DuplicatedAccount.code => DuplicatedAccount.asRight
+    case AccountNotInitialised.code => AccountNotInitialised.asRight
+    case CardNotActive.code => CardNotActive.asRight
+    case InsufficientLimit.code => InsufficientLimit.asRight
+    case HighFrequency.code => HighFrequency.asRight
+    case DoubledTransaction.code => DoubledTransaction.asRight
+    case ExceedLimitTopBoundary.code => ExceedLimitTopBoundary.asRight
+    case other => s"'$other' is not a known violation type".asLeft
+  }
   implicit val eq: Eq[Violation] = Eq.by[Violation, String](_.code)
 }
 

@@ -29,9 +29,9 @@ object Main extends IOApp {
       new DoubledTransactionValidator(Duration.ofMinutes(2), 1),
       LimitTopBoundaryValidator
     )
-    (new AccountService(repo, DuplicateAccountValidator, AccountInformationExistenceValidator, transactionValidator): AccountAlgebra[
+    new AccountService(repo, DuplicateAccountValidator, AccountInformationExistenceValidator, transactionValidator): AccountAlgebra[
       StoreContext
-    ])
+    ]
   }
 
   override def run(args: List[String]): IO[ExitCode] = {
@@ -40,7 +40,7 @@ object Main extends IOApp {
       λ[StoreContext ~> AppContext] { EitherT.liftF(_) }
 
     val source: StoreContext[String] = StateT.liftF(IO(Console.in.readLine()))
-    val sink: String => StoreContext[Unit] = a => StateT.liftF(IO(Console.println(s"${Console.YELLOW}$a${Console.RESET}")).void)
+    val sink: String => StoreContext[Unit] = a => StateT.liftF(IO(Console.println(a)).void)
 
     def errorToExitCode[E](e: E): ExitCode = ExitCode.Error
 
@@ -49,7 +49,7 @@ object Main extends IOApp {
         Transition.jsonToA[AppContext, Event, ExitCode](errorToExitCode) andThen
         Dispatcher(service.mapK(contextLifting)) andThen
         Transition.aToJson[AppContext, Result] andThen
-        Transition.jsonToString[AppContext](Printer.spaces2)
+        Transition.jsonToString[AppContext](Printer.noSpaces)
 
     Loop.run(source, sink)(p.run).run(None).map { case (_, exitCode: ExitCode) => exitCode }
   }

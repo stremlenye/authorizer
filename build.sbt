@@ -5,7 +5,7 @@ ThisBuild / useSuperShell := false
 ThisBuild / scalaVersion := "2.12.9"
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / organization := "com.coding-challenge"
-ThisBuild / organizationName := "com/challenge"
+ThisBuild / organizationName := "com.challenge"
 
 addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
 
