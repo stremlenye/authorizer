@@ -1,7 +1,7 @@
 package com.authorizer.services
 
 import cats.Monad
-import com.authorizer.algebras.{AccountAlgebra, AccountInformationRepoAlgebra, AccountInformationValidator, NewAccountValidator, TransactionValidator}
+import com.authorizer.algebras.{AccountAlgebra, AccountInformationRepoAlgebra, AccountInformationValidator, AccountValidator, TransactionValidator}
 import com.authorizer.models._
 import cats.syntax.functor._
 import cats.syntax.flatMap._
@@ -9,7 +9,7 @@ import cats.syntax.applicative._
 
 class AccountService[F[_]](
                             repo: AccountInformationRepoAlgebra[F],
-                            newAccountValidator: NewAccountValidator,
+                            newAccountValidator: AccountValidator,
                             accountInformationValidator: AccountInformationValidator,
                             transactionValidator: TransactionValidator
 )(
