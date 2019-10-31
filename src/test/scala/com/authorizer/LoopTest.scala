@@ -3,10 +3,11 @@ package com.authorizer
 import cats.data.EitherT
 import cats.effect.{ExitCode, SyncIO}
 import com.authorizer.utils.Loop
-import org.scalatest.FunSuite
+import org.scalatest.FlatSpec
+import org.scalatest.tagobjects.Slow
 
-class LoopTest extends FunSuite {
-  ignore("should be stack safe") {
+class LoopTest extends FlatSpec {
+  it should "be stack safe" taggedAs Slow  in {
     val size = 10000
     val feed = Stream.from(0).take(size + 1).iterator
     val result = Loop

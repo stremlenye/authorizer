@@ -5,12 +5,8 @@ object Dependencies {
   val mtlVersion = "0.6.0"
   val taglessVersion = "0.9"
   val fs2Version = "2.0.1"
-  val shapelessVersion = "2.3.3"
-  val newtypeVersion = "0.4.3"
   val circeVersion = "0.11.1"
-  val scalacheckVersion = "1.14.0"
   val scalatestVersion = "3.0.8"
-  val pureconfigVersion = "0.11.1"
   val kindProjectorVersion = "0.10.3"
 
   val compilerPlugins = Seq(
@@ -23,22 +19,15 @@ object Dependencies {
   lazy val tagless = "org.typelevel" %% "cats-tagless-macros" % taglessVersion
   lazy val fs2 = "co.fs2" %% "fs2-core" % fs2Version
 
-  lazy val newtype = "io.estatico" %% "newtype" % newtypeVersion
-
-  lazy val shapeless = "com.chuusai" %% "shapeless" % shapelessVersion
-
   lazy val circe = Seq(
     "io.circe" %% "circe-core",
     "io.circe" %% "circe-generic",
     "io.circe" %% "circe-generic-extras",
-    "io.circe" %% "circe-shapes",
     "io.circe" %% "circe-parser"
   ).map(_ % circeVersion % "compile,it")
 
-  val pureconfig = "com.github.pureconfig" %% "pureconfig" % pureconfigVersion
 
   lazy val scalaTest = "org.scalatest" %% "scalatest" % scalatestVersion % "it,test"
-  lazy val scalaCheck = "org.scalacheck" %% "scalacheck" % scalacheckVersion % "it,test"
 
   lazy val allDependencies = Seq(
     cats,
@@ -46,10 +35,6 @@ object Dependencies {
     mtl,
     tagless,
     fs2,
-    newtype,
-    shapeless,
-    pureconfig,
     scalaTest,
-    scalaCheck
   ) ++ circe ++ compilerPlugins
 }

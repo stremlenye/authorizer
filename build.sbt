@@ -17,6 +17,7 @@ lazy val root = (project in file("."))
     resolvers ++= Seq(Resolver.sonatypeRepo("releases")),
     libraryDependencies ++= allDependencies,
     mainClass := Some("com.authorizer.Main"),
+    testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-l", "org.scalatest.tags.Slow"),
     Defaults.itSettings,
     fork in Test := true,
     fork in IntegrationTest := true,
