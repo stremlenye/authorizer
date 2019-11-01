@@ -1,4 +1,10 @@
 # Authorizer
+## Assumptions
+* transactions come in a not chronological sequence (not sorted by time)
+* the available limit has a top boundary of `Int.MaxValue`
+* account’s available limit is calculated based on ‘first come – first served’ principal, which means the funds sufficiency check performed against current available limit and the timestamp of the transaction is not taken in account
+* The transactions cache stored in memory virtually never causes `OutOfMemoryException` so no cache deprecation is necessary
+
 ## Design
 ### Domain
 
@@ -58,9 +64,11 @@ To run application you could use previously built asset which you could find in 
 As an alternative `sbt run` could be used.
 
 ## Notes
-Solution provides the simple tool to generate random input for the application.
+1. Solution provides the simple tool to generate random input for the application.
 To run it use:
 ```shell
 sbt "set mainClass := Some(\"com.authorizer.InputGen\"); set assemblyJarName in assembly := \"inputgen.jar\"; assembly"
 ./target/scala-2.12/inputgen.jar
 ```
+
+2. Even though some if the implemented components are configurable not external configuration reading options are provided for the sake of simplicity of the solution.
